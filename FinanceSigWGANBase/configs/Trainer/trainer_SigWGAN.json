@@ -1,0 +1,12 @@
+{
+  "batch_size": 256,
+  "n_gradient_steps": 2,
+  "depth": 4,
+  "lr": 1e-3,
+  "augmentations": [
+    {"name":  "Scale", "scale":  1, "dim": 0},
+    {"name":  "AddTime"},
+    {"name":  "LeadLag"},
+    {"name":  "VisiTrans", "type": "I"}
+  ]
+}

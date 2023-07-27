@@ -1,0 +1,5 @@
+{
+  "name": "TetherUSD",
+  "n_lags": 30,
+  "timeframe": "1d"
+}

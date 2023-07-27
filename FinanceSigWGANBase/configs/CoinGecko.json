@@ -1,0 +1,5 @@
+{
+  "name": "CoinGecko",
+  "n_lags": 120,
+  "timeframe": "1h"
+}
