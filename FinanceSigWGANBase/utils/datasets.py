@@ -132,14 +132,14 @@ def get_data_mybinance(datadir, data_config):
         print('Use data: \n\t' + '\n\t'.join(files))
         datasets = load_obj(data_path)
         print(f'\tRolled data for training, shape {list(datasets.shape)}')
-        print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
+        # print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
+        print('\tExample :', datasets[0][:3])
     else:
         datasets = []
         for file in files:
             if os.path.exists(file + '.rolled.pt'):
                 dataset = load_obj(data_path)
             else:
-                # df = pd.read_csv(file).iloc[::60, :]
                 df = pd.read_csv(file)
                 print(df)
                 print(f'Preprocess data: {os.path.basename(file)}, shape {df.shape}')
@@ -155,7 +155,7 @@ def get_data_mybinance(datadir, data_config):
             print(f'\tRolled data for training, shape {list(dataset.shape)}')
             print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in dataset[0][:3]]))
             print()
-        datasets = torch.cat(datasets, dim=0)
+        datasets = torch.cat(datasets, dim=2)
         save_obj(datasets, data_path)
     return datasets
 
