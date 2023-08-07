@@ -24,6 +24,10 @@ def get_sigwgan_experiment_dir(dataset, generator, gan, seed):
     return './numerical_results/{dataset}/{gan}_{generator}_{seed}'.format(
         dataset=dataset, gan=gan, generator=generator, seed=seed)
 
+def get_experiment_dir(dataset, generator, discriminator, gan, seed):
+    return './numerical_results/{dataset}/{gan}_{generator}_{discriminator}_{seed}'.format(
+        dataset=dataset, gan=gan, generator=generator, discriminator=discriminator, seed=seed)
+
 
 def set_seed(seed: int):
     """ Sets the seed to a specified value. Needed for reproducibility of experiments. """

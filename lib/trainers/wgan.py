@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import autograd
 from tqdm import tqdm
@@ -65,6 +66,7 @@ class WGANTrainer(BaseTrainer):
             # generate x_fake
             indices = sample_indices(self.x_real.shape[0], self.batch_size)
             x_real_batch = self.x_real[indices].to(device)
+            # torch.no_grad() is a context-manager that disabled gradient calculation for wrapped code.
             with torch.no_grad():
                 x_fake = self.G(batch_size=self.batch_size, n_lags=self.x_real.shape[1], device=device)
                 if self.augmentations is not None:
@@ -127,8 +129,16 @@ class WGANTrainer(BaseTrainer):
         return dloss_real.item(), dloss_fake.item(), wgan_gp.item()
 
     def compute_loss(self, d_out, target):
-        targets = d_out.new_full(size=d_out.size(), fill_value=target)
-        return (2. * target - 1.) * d_out.mean()
+        '''
+        d_out: real-valued vector / Output from discriminator \n
+        target: scalar / 0 or 1
+        '''
+        # targets = d_out.new_full(size=d_out.size(), fill_value=target)
+        targets = d_out.new_full(size = tuple(d_out.size()), fill_value = target)
+        res = d_out - targets
+        squared_error = sum(res**2) / res.size()[0]
+        return squared_error
+        # return (2. * targets - 1.) * d_out.mean()
 
     def wgan_gp_reg(self, x_real, x_fake, center=1.):
         batch_size = x_real.size(0)
