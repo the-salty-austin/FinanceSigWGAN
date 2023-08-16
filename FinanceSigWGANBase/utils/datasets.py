@@ -36,6 +36,13 @@ def transfer_percentage_seq(x):
     return new_x
 
 
+def get_smallest_data_size(data):
+    min_size = np.inf
+    for d in data:
+        min_size = min(d.shape[0], min_size)
+    
+    return min_size
+
 def get_data_stablecoin(datadir, data_config):
     """
     Get Stable Coin dataset
@@ -50,7 +57,8 @@ def get_data_stablecoin(datadir, data_config):
         print('Use data: \n\t' + '\n\t'.join(files))
         datasets = load_obj(data_path)
         print(f'\tRolled data for training, shape {list(datasets.shape)}')
-        print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
+        # print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
+        print('\tExample :', datasets[0][:3])
     else:
         datasets = []
         for file in files:
@@ -59,23 +67,26 @@ def get_data_stablecoin(datadir, data_config):
             else:
                 decimals = int(file.split('_')[-2])
                 df = pd.read_csv(file)
-                df = df.drop_duplicates(subset=[df.columns[0]], keep='last')
+                dataset = df.drop_duplicates(subset=[df.columns[0]], keep='last')
 
-                dataset = df.to_numpy()
-                print(dataset)
+                dataset = dataset.to_numpy()
+                # print(dataset)
                 print(f'Preprocess data: {os.path.basename(file)}, shape {df.shape}, after del repeat {dataset.shape}')
                 dataset = dataset[:, 1:2].astype(np.float) / 10 ** decimals
                 dataset = rolling_window(torch.FloatTensor(dataset), data_config['n_lags'])
-                print(dataset)
+                # print(dataset)
                 dataset = transfer_percentage_seq(dataset)
-                print(dataset)
+                # print(dataset)
 
                 save_obj(dataset, file + '.rolled.pt')
             datasets.append(dataset)
             print(f'\tRolled data for training, shape {list(dataset.shape)}')
             print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in dataset[0][:3]]))
             print()
-        datasets = torch.cat(datasets, dim=0)
+        # datasets = torch.cat(datasets, dim=0)
+        smallest = get_smallest_data_size(datasets)
+        datasets = [x[:smallest,:] for x in datasets]
+        datasets = torch.cat(datasets, dim=2)
         save_obj(datasets, data_path)
     return datasets
 

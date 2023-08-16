@@ -1,5 +1,5 @@
 {
   "name": "STABLECOIN",
-  "n_lags": 30,
+  "n_lags": 10,
   "timeframe": "1d"
 }

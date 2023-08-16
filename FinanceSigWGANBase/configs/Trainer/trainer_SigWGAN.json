@@ -1,8 +1,10 @@
 {
-  "batch_size": 256,
-  "n_gradient_steps": 250,
+  "batch_size": 8,
+  "n_gradient_steps": 150,
   "depth": 4,
-  "lr": 5e-4,
+  "lr_generator": 8e-4,
+  "lr_discriminator": 8e-4,
+  "discriminator_steps_per_generator_step": 3,
   "augmentations": [
     {"name":  "Scale", "scale":  1, "dim": 0},
     {"name":  "AddTime"},

@@ -141,11 +141,17 @@ class WGANTrainer(BaseTrainer):
         # return (2. * targets - 1.) * d_out.mean()
 
     def wgan_gp_reg(self, x_real, x_fake, center=1.):
+        '''
+        Gradient Penalty \n
+        https://arxiv.org/abs/2005.09165 Brock et al. [7] 
+        '''
         batch_size = x_real.size(0)
         eps = torch.rand(batch_size, device=x_real.device).view(batch_size, 1, 1)
+        # sampling algorithms: (1 − 𝛼)𝑥 + 𝛼𝑥̂
         x_interp = (1 - eps) * x_real + eps * x_fake
         x_interp = x_interp.detach()
-        x_interp.requires_grad_()
+        x_interp.requires_grad_() # W
         d_out = self.D(x_interp)
+        # || W^T * W - I ||_2
         reg = (compute_grad2(d_out, x_interp).sqrt() - center).pow(2).mean()
         return reg
