@@ -1,9 +1,9 @@
 {
   "batch_size": 8,
-  "n_gradient_steps": 150,
+  "n_gradient_steps": 1500,
   "depth": 4,
-  "lr_generator": 8e-4,
-  "lr_discriminator": 8e-4,
+  "lr_generator": 6e-4,
+  "lr_discriminator": 9e-4,
   "discriminator_steps_per_generator_step": 3,
   "augmentations": [
     {"name":  "Scale", "scale":  1, "dim": 0},
