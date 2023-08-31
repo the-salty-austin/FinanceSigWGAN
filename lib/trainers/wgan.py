@@ -82,11 +82,12 @@ class WGANTrainer(BaseTrainer):
         self.losses_history['G_loss'].append(G_loss)
 
     def G_trainstep(self, device):
+        toggle_grad(self.G, True)
+
         x_fake = self.G(batch_size=self.batch_size, n_lags=self.x_real.shape[1], device=device)
         if self.augmentations is not None:
             x_fake = apply_augmentations(x_fake, self.augmentations)
 
-        toggle_grad(self.G, True)
         self.G.train()
         self.G_optimizer.zero_grad()
         d_fake = self.D(x_fake)
@@ -96,6 +97,7 @@ class WGANTrainer(BaseTrainer):
         self.G_optimizer.step()
         self.evaluate(x_fake)
 
+        toggle_grad(self.G, False)
         return G_loss.item()
 
     def D_trainstep(self, x_fake, x_real):
