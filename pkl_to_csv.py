@@ -4,7 +4,7 @@ import csv
 
 '''
 # Load the pickle file
-with open('.\\FinanceSigWGANBase\\numerical_results\\MyBinance\\SigWGAN_LogSigRNN_0\\x_real_test.pkl', 'rb') as f:
+with open('.\\numerical_results\\MyBinance\\SigWGAN_LogSigRNN_0\\x_real_test.pkl', 'rb') as f:
     data = pickle.load(f)
 
 print(data.shape)

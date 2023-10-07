@@ -110,6 +110,8 @@ class WGANTrainer(BaseTrainer):
         d_real = self.D(x_real)
         dloss_real = self.compute_loss(d_real, 1)
 
+        # print(dloss_real)
+
         # On fake data
         x_fake.requires_grad_()
         d_fake = self.D(x_fake)
@@ -135,12 +137,21 @@ class WGANTrainer(BaseTrainer):
         d_out: real-valued vector / Output from discriminator \n
         target: scalar / 0 or 1
         '''
-        # targets = d_out.new_full(size=d_out.size(), fill_value=target)
-        targets = d_out.new_full(size = tuple(d_out.size()), fill_value = target)
-        res = d_out - targets
-        squared_error = sum(res**2) / res.size()[0]
-        return squared_error
-        # return (2. * targets - 1.) * d_out.mean()
+        targets = d_out.new_full(size=d_out.size(), fill_value=target)
+        return (2. * target - 1.) * d_out.mean()
+
+    # def compute_loss(self, d_out, target):
+    #     '''
+    #     d_out: real-valued vector / Output from discriminator \n
+    #     target: scalar / 0 or 1
+    #     '''
+    #     # targets = d_out.new_full(size=d_out.size(), fill_value=target)
+    #     targets = d_out.new_full(size = tuple(d_out.size()), fill_value = target)
+    #     # res = d_out - targets
+    #     # squared_error = sum(res**2) / res.size()[0]
+    #     # return squared_error
+    #     print(" (2. * targets - 1.) * d_out.mean() ")
+    #     return (2. * targets - 1.) * d_out.mean()
 
     def wgan_gp_reg(self, x_real, x_fake, center=1.):
         '''

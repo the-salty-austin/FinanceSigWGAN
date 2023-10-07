@@ -97,4 +97,4 @@ if __name__ == "__main__":
         print(f"Download completed: H1-{symbol}")
         print(f"There are {df.close.isna().sum() } N/As in close prices.")
 
-        df.to_csv(f"./FinanceSigWGANBase/datasets/MyBinance/{symbol}USDT_{period}.csv")
+        df.to_csv(f"./datasets/MyBinance/{symbol}USDT_{period}.csv")

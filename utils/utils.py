@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from pandas import DataFrame
 from tqdm import tqdm
 
-from FinanceSigWGANBase.generate import load_obj
-from FinanceSigWGANBase.utils.plot import plot_sequence
+from generate import load_obj
+from utils.plot import plot_sequence
 
 
 def get_config_path(config_type, name):

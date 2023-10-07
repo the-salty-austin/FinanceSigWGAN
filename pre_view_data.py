@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime
 from matplotlib import pyplot as plt
 
-from FinanceSigWGANBase.utils.datasets import get_dataset
+from utils.datasets import get_dataset
 
 
 def plot_real_data(dataset, num_data):

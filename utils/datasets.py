@@ -6,9 +6,9 @@ import glob
 import torch
 from torch.utils.data import RandomSampler
 
-from FinanceSigWGANBase.generate import load_obj
+from generate import load_obj
 from lib.utils import sample_indices
-from FinanceSigWGANBase.utils.utils import rolling_period_resample, save_obj
+from utils.utils import rolling_period_resample, save_obj
 
 DATA_DIR = 'datasets'
 
