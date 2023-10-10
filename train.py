@@ -81,7 +81,7 @@ def main(
                                  test_metrics_train=test_metrics_train,
                                  test_metrics_test=test_metrics_test,
                                  **gan_config
-                                )
+                            )
     else:
         raise NotImplementedError()
 
@@ -271,7 +271,9 @@ if __name__ == '__main__':
     training_discriminators=('ResFNN',)
     # training_generators = ('LSTM',)
     # training_generators = ('LogSigRNN', 'LSTM')
-
+  
+   
+     
     n_seeds = {
         "start": 0,
         "end": 1,
