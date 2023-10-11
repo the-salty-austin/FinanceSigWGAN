@@ -24,14 +24,14 @@ class SigWGANTrainer(BaseTrainer):
 
     def fit(self, device):
         self.G.to(device)
-        best_loss = None
+        best_loss = 10**10
         pbar = tqdm(range(self.n_gradient_steps))
         for j in pbar:
             self.G_optimizer.zero_grad()
             x_fake = self.G(
                 batch_size=self.batch_size, n_lags=self.sig_w1_metric.n_lags, device=device
             )
-            loss = self.sig_w1_metric(x_fake)  # E[ S(x_real) - S(X_fake) ]
+            loss = self.sig_w1_metric(x_fake)  # E[S(x_real)] - E[S(X_fake)]
             loss.backward()
             best_loss = loss.item() if j == 0 else best_loss
 
@@ -40,11 +40,12 @@ class SigWGANTrainer(BaseTrainer):
             self.scheduler.step()
             self.losses_history['sig_w1_loss'].append(loss.item())
             self.evaluate(x_fake)
-            # if loss < best_loss:
-            #    best_G = deepcopy(self.G.state_dict())
-            #    best_loss = loss
 
-        self.G.load_state_dict(self.best_G)  # we retrieve the best generator
+            if loss < best_loss:
+               best_G = deepcopy(self.G.state_dict())
+               best_loss = loss
+
+        self.G.load_state_dict(best_G)  # we retrieve the best generator
 
         
 class SigWGANTrainerDyadicWindows(BaseTrainer):

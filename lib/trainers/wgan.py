@@ -76,7 +76,7 @@ class WGANTrainer(BaseTrainer):
             if i == 0:
                 self.losses_history['D_loss_fake'].append(D_loss_fake)
                 self.losses_history['D_loss_real'].append(D_loss_real)
-                self.losses_history['D_loss'].append(D_loss_fake + D_loss_real)
+                self.losses_history['D_loss'].append(D_loss_fake - D_loss_real + wgan_gp)
                 self.losses_history['WGAN_GP'].append(wgan_gp)
         G_loss = self.G_trainstep(device)
         self.losses_history['G_loss'].append(G_loss)
@@ -92,36 +92,48 @@ class WGANTrainer(BaseTrainer):
         self.G_optimizer.zero_grad()
         d_fake = self.D(x_fake)
         self.D.train()
-        G_loss = self.compute_loss(d_fake, 1)
+        # G_loss = self.compute_loss(d_fake, 1)
+        G_loss = -d_fake.mean()
         G_loss.backward()
         self.G_optimizer.step()
         self.evaluate(x_fake)
 
         toggle_grad(self.G, False)
+        # return G_loss.item()
         return G_loss.item()
 
     def D_trainstep(self, x_fake, x_real):
+        # https://github.com/SigCGANs/Sig-Wasserstein-GANs/blob/main/lib/trainers/wgan.py
         toggle_grad(self.D, True)
+
         self.D.train()
         self.D_optimizer.zero_grad()
 
         # On real data
         x_real.requires_grad_()
         d_real = self.D(x_real)
-        dloss_real = self.compute_loss(d_real, 1)
+        # dloss_real = self.compute_loss(d_real, 1)
+        dloss_real = d_real.mean()
 
         # print(dloss_real)
 
         # On fake data
         x_fake.requires_grad_()
-        d_fake = self.D(x_fake)
-        dloss_fake = self.compute_loss(d_fake, 0)
+        batch_size = x_real.size(0)
+        eps = torch.rand(batch_size, device=x_real.device).view(batch_size, 1, 1)
+        x_interpolate = (1 - eps) * x_fake + eps * x_real
+        d_fake = self.D(x_interpolate)
+        # dloss_fake = self.compute_loss(d_fake, 0)
+        dloss_fake = d_fake.mean()
 
         # Compute regularizer on fake / real
-        dloss = dloss_fake + dloss_real
+        # dloss = dloss_fake + dloss_real
         with torch.backends.cudnn.flags(enabled=False):
-            wgan_gp = self.reg_param * self.wgan_gp_reg(x_real, x_fake)
-        total_loss = dloss + wgan_gp
+            # WAN-GP: gradient penalty
+            gradient_penalty = self.reg_param * self.wgan_gp_reg(x_real, x_fake, eps)
+            
+        # total_loss = dloss + wgan_gp
+        total_loss = dloss_fake - dloss_real + gradient_penalty
         total_loss.backward()
 
         # Step discriminator params
@@ -130,7 +142,7 @@ class WGANTrainer(BaseTrainer):
         # Toggle gradient to False
         toggle_grad(self.D, False)
 
-        return dloss_real.item(), dloss_fake.item(), wgan_gp.item()
+        return dloss_real.item(), dloss_fake.item(), gradient_penalty.item()
 
     def compute_loss(self, d_out, target):
         '''
@@ -140,31 +152,16 @@ class WGANTrainer(BaseTrainer):
         targets = d_out.new_full(size=d_out.size(), fill_value=target)
         return (2. * target - 1.) * d_out.mean()
 
-    # def compute_loss(self, d_out, target):
-    #     '''
-    #     d_out: real-valued vector / Output from discriminator \n
-    #     target: scalar / 0 or 1
-    #     '''
-    #     # targets = d_out.new_full(size=d_out.size(), fill_value=target)
-    #     targets = d_out.new_full(size = tuple(d_out.size()), fill_value = target)
-    #     # res = d_out - targets
-    #     # squared_error = sum(res**2) / res.size()[0]
-    #     # return squared_error
-    #     print(" (2. * targets - 1.) * d_out.mean() ")
-    #     return (2. * targets - 1.) * d_out.mean()
-
-    def wgan_gp_reg(self, x_real, x_fake, center=1.):
+    def wgan_gp_reg(self, x_real, x_fake, eps, center=1.):
         '''
         Gradient Penalty \n
         https://arxiv.org/abs/2005.09165 Brock et al. [7] 
         '''
-        batch_size = x_real.size(0)
-        eps = torch.rand(batch_size, device=x_real.device).view(batch_size, 1, 1)
         # sampling algorithms: (1 − 𝛼)𝑥 + 𝛼𝑥̂
-        x_interp = (1 - eps) * x_real + eps * x_fake
-        x_interp = x_interp.detach()
-        x_interp.requires_grad_() # W
-        d_out = self.D(x_interp)
+        x_interpolate = (1 - eps) * x_fake + eps * x_real
+        x_interpolate = x_interpolate.detach()
+        x_interpolate.requires_grad_() # W
+        d_out = self.D(x_interpolate)
         # || W^T * W - I ||_2
-        reg = (compute_grad2(d_out, x_interp).sqrt() - center).pow(2).mean()
+        reg = (compute_grad2(d_out, x_interpolate).sqrt() - center).pow(2).mean()
         return reg

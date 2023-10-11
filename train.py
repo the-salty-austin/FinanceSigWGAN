@@ -4,6 +4,7 @@ Procedure for calibrating generative models using the unconditional Sig-Wasserst
 
 import os
 import torch
+import numpy as np
 import argparse
 import itertools
 import matplotlib.pyplot as plt
@@ -101,11 +102,22 @@ def main(
     loss_history = os.path.join(experiment_dir, 'LossHistory')
     os.makedirs(loss_history, exist_ok=True)
 
-    plt.plot(trainer.losses_history['sig_w1_loss'], alpha=0.8)
-    plt.grid()
-    plt.yscale('log')
-    plt.savefig(os.path.join(loss_history, 'sig_loss.png'))
-    plt.close()
+    if gan_algo == 'SigWGAN':
+        plt.plot(trainer.losses_history['sig_w1_loss'], alpha=0.8)
+        plt.grid()
+        plt.yscale('log')
+        plt.savefig(os.path.join(loss_history, 'sig_loss.png'))
+        plt.close()
+    elif gan_algo == 'WGAN':
+        # plt.plot(trainer.losses_history['D_loss_fake'], label="D_loss_fake")
+        # plt.plot(trainer.losses_history['D_loss_real'], label="D_loss_real")
+        plt.plot(trainer.losses_history['G_loss'], label="G_loss")
+        plt.plot(np.array(trainer.losses_history['D_loss_fake']) - np.array(trainer.losses_history['D_loss_real']) + np.array(trainer.losses_history['WGAN_GP']), label="D_loss" )
+        plt.grid()
+        # plt.yscale('log')
+        plt.legend(loc='best')
+        plt.savefig(os.path.join(loss_history, 'wgan_loss.png'))
+        plt.close()
 
     plot_test_metrics(trainer.test_metrics_train, trainer.losses_history, 'train', locate_dir=loss_history)
 
@@ -285,8 +297,8 @@ if __name__ == '__main__':
                       n_seeds=n_seeds,
                       device=compute_device)
     
-    benchmark_wgan(datasets=target_dataset,
-                   generators=training_generators,
-                   discriminators=training_discriminators,
-                   n_seeds=n_seeds,
-                   device=compute_device)
+    # benchmark_wgan(datasets=target_dataset,
+    #                generators=training_generators,
+    #                discriminators=training_discriminators,
+    #                n_seeds=n_seeds,
+    #                device=compute_device)

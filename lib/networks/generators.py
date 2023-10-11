@@ -149,7 +149,7 @@ class LogSigRNNGenerator(GeneratorBase):
         self.len_noise = len_noise
         self.time_brownian = torch.linspace(0, 1,
                                             self.len_noise)  # len_noise is high enough so that we can consider this as a continuous brownian motion
-        self.time_u = self.time_brownian[::len_interval_u]
+        self.time_u = self.time_brownian[::len_interval_u]  # ([0.0000, 0.0501, 0.1001, 0.1502, 0.2002, 0.2503, 0.3003, 0.3504, 0.4004, 0.4505, 0.5005, 0.5506, 0.6006, 0.6507, 0.7007, 0.7508, 0.8008, 0.8509, 0.9009, 0.9510])
         # self.time_t = torch.linspace(0,1,n_lags)
 
         # definition of LSTM + linear at the end
@@ -165,26 +165,48 @@ class LogSigRNNGenerator(GeneratorBase):
         self.linear.apply(init_weights)
 
         # neural network to initialise h0 from the LSTM
-        self.initial_nn = nn.Sequential(ResFNN(input_dim, hidden_dim, [hidden_dim, hidden_dim]), nn.Tanh())
+        self.initial_nn = nn.Sequential(
+            ResFNN(input_dim, hidden_dim, [hidden_dim, hidden_dim]),
+            nn.Tanh()
+        )
         self.initial_nn.apply(init_weights)
         self.init_fixed = init_fixed
 
     def forward(self, batch_size: int, n_lags: int, device: str, ):
         time_t = torch.linspace(0, 1, n_lags).to(device)
+        # time_t: torch.Size([72]) = [n_lags]
+        # time_brownian: torch.Size([1000]) = [gen_config.len_noise]
+
+        # z: torch.Size([1024, 1000, 5]) = [batch_size, gen_config.len_noise, gen_config.input_dim]
         z = torch.randn(batch_size, self.len_noise, self.input_dim, device=device)
+        
+        # h is the time step of the Brownian motion. All cell values same
+        # h: torch.Size([1, 999, 5]) = [1, gen_config.len_noise - 1 , gen_config.input_dim]
         h = (self.time_brownian[1:] - self.time_brownian[:-1]).reshape(1, -1, 1).repeat(1, 1, self.input_dim)
         h = h.to(device)
+
         z[:, 1:, :] *= torch.sqrt(h)
         z[:, 0, :] *= 0  # first point is fixed
+
+        # brownian_path: torch.Size([1024, 1000, 5]) = [batch_size, gen_config.len_noise, gen_config.input_dim]
         brownian_path = z.cumsum(1)
+
+        # y: torch.Size([1024, 1000, 5+1]) with "AddTime"
         y = apply_augmentations(brownian_path, self.augmentations)
         y_logsig, u_logsigrnn = compute_multilevel_logsignature(brownian_path=y,
                                                                 time_brownian=self.time_brownian.to(device),
                                                                 time_u=self.time_u.to(device), time_t=time_t.to(device),
                                                                 depth=self.depth)
-        u_logsigrnn.append(time_t[-1])
+        # [y_logsig] is a list, length 72 = n_lags.
+        # Each element size in [y_logsig]: torch.Size([1024, 91]) = [batch_size, log_signature_len]
 
-        if self.init_fixed:
+        # [u_logsigrnn] is a list of 20 values which are timestamps (the same as self.time_u)
+        # [tensor(0., device='cuda:0'), tensor(0.0501, device='cuda:0'), tensor(0.1001, device='cuda:0'), ... , tensor(0.9510, device='cuda:0')]
+        
+        # becomes [tensor(0., device='cuda:0'), ..., [tensor(1., device='cuda:0')]
+        u_logsigrnn.append(time_t[-1]) # essentially adding the final timestamp
+
+        if self.init_fixed:  # gen_config
             h0 = torch.zeros(batch_size, self.hidden_dim).to(device)
         else:
             z0 = torch.randn(batch_size, self.input_dim, device=device)
@@ -196,7 +218,7 @@ class LogSigRNNGenerator(GeneratorBase):
             h = self.rnn(torch.cat([last_h, y_logsig_], -1))
             if t >= u_logsigrnn[0]:
                 del u_logsigrnn[0]
-                last_h = h
+                last_h = h  # this is why the yellow hidden nodes have periodically in my depiction
             x[:, idx, :] = self.linear(h)
 
         assert x.shape[1] == n_lags
