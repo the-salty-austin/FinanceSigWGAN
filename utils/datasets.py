@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import glob
 import torch
 from torch.utils.data import RandomSampler
@@ -9,6 +10,8 @@ from torch.utils.data import RandomSampler
 from generate import load_obj
 from lib.utils import sample_indices
 from utils.utils import rolling_period_resample, save_obj
+
+from lib.datasets import get_rBergomi_paths
 
 DATA_DIR = 'datasets'
 
@@ -260,6 +263,37 @@ def get_data_uni_swap(datadir, data_config):
     return datasets
 
 
+def get_corr_brownian_motion(datadir, data_config):
+
+    data_path = os.path.join(datadir, 'x_real_rolled.pt')
+
+    n_lag = data_config['n_lags']
+    d = data_config['n_path_dim']
+
+    cov_matrix = np.random.rand(d, d)
+    cov_matrix = 0.5 * (cov_matrix + cov_matrix.T) # Ensure it's symmetric
+    np.fill_diagonal(cov_matrix, 1.0) # Make sure the diagonal elements are all ones
+    std_deviation = np.sqrt(np.diag(cov_matrix))
+    C = cov_matrix / np.outer(std_deviation, std_deviation)
+
+    L = np.linalg.cholesky(C) # Cholesky Decomposition
+    dt = 1/252 # daily
+
+    tensor_list = []
+
+    for _ in range(data_config['n_paths']):
+        X = np.random.normal(0, dt**(1/2), (d, n_lag)) # Brownian Motion - n_lag daily time steps for 2 assets
+        CX = np.dot(L, X) # correlated paths
+
+        tensor = torch.from_numpy( CX.cumsum(1) ).T
+        tensor_list.append( tensor )
+
+    datasets = torch.stack(tensor_list, dim=0)
+
+    save_obj(datasets, data_path)
+    return datasets
+
+
 def get_dataset(dataset: str, data_config: dict):
     """
     Loads different datasets and downloads missing datasets.
@@ -290,6 +324,11 @@ def get_dataset(dataset: str, data_config: dict):
         x_real = get_data_uni_swap(os.path.join(DATA_DIR, 'StakedETH'), data_config=data_config)
     elif dataset == 'Uniswap':
         x_real = get_data_uni_swap(os.path.join(DATA_DIR, 'Uniswap'), data_config=data_config)
+    elif dataset == 'CorrelatedBrownian':
+        x_real = get_corr_brownian_motion(os.path.join(DATA_DIR, 'CorrelatedBrownian'), data_config=data_config)
+    elif dataset == 'RoughVolatility':
+        x_real = get_rBergomi_paths()
+    
     else:
         raise NotImplementedError('Dataset %s not valid' % dataset)
 

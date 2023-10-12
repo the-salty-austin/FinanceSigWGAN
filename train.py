@@ -271,7 +271,8 @@ if __name__ == '__main__':
     else:
         compute_device = 'cpu'
     # target_dataset = os.listdir('./datasets')[-1:]
-    target_dataset = ('MyBinance', )
+    # target_dataset = ('MyBinance', )
+    target_dataset = ('CorrelatedBrownian', )
     # target_dataset.remove('Uniswap')
     # target_dataset.append('Uniswap')
     # target_dataset = ('BINANCE',)
@@ -297,8 +298,8 @@ if __name__ == '__main__':
                       n_seeds=n_seeds,
                       device=compute_device)
     
-    # benchmark_wgan(datasets=target_dataset,
-    #                generators=training_generators,
-    #                discriminators=training_discriminators,
-    #                n_seeds=n_seeds,
-    #                device=compute_device)
+    benchmark_wgan(datasets=target_dataset,
+                   generators=training_generators,
+                   discriminators=training_discriminators,
+                   n_seeds=n_seeds,
+                   device=compute_device)

@@ -1,6 +1,6 @@
 {
     "batch_size": 1024,
-    "n_gradient_steps": 128,
+    "n_gradient_steps": 256,
     "lr_generator": 5e-4,
     "lr_discriminator": 5e-4,
     "discriminator_steps_per_generator_step": 3

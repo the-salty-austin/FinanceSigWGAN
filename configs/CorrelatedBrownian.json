@@ -1,0 +1,6 @@
+{
+    "name": "CorrelatedBrownian",
+    "n_lags": 24,
+    "n_paths": 4096,
+    "n_path_dim": 4
+}

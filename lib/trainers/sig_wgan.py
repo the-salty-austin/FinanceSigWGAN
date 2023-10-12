@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 
 import signatory
+import numpy as np
 import torch
 from torch import autograd
 from tqdm import tqdm
@@ -24,7 +25,7 @@ class SigWGANTrainer(BaseTrainer):
 
     def fit(self, device):
         self.G.to(device)
-        best_loss = 10**10
+        best_loss = np.inf
         pbar = tqdm(range(self.n_gradient_steps))
         for j in pbar:
             self.G_optimizer.zero_grad()
@@ -41,7 +42,8 @@ class SigWGANTrainer(BaseTrainer):
             self.losses_history['sig_w1_loss'].append(loss.item())
             self.evaluate(x_fake)
 
-            if loss < best_loss:
+            # if loss < best_loss:
+            if True:
                best_G = deepcopy(self.G.state_dict())
                best_loss = loss
 

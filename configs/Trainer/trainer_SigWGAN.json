@@ -1,6 +1,6 @@
 {
     "batch_size": 8,
-    "n_gradient_steps": 128,
+    "n_gradient_steps": 256,
     "depth": 4,
     "lr_generator": 5e-5,
     "augmentations": [

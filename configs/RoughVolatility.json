@@ -1,0 +1,4 @@
+{
+    "name": "RoughVolatility",
+    "n_lags": 100
+}
