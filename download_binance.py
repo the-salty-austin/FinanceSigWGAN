@@ -85,10 +85,10 @@ def get_data_since(symbol, startTime, endTime, interval):
     return df
 
 if __name__ == "__main__":
-    symbols = ["BTC", "ETH", "BNB"]
+    symbols = ["BTC", "ETH", "BNB", "SOL", "XRP"]
     period = "1h"
     start = datetime.datetime(2021, 1,  1, 0, 0)
-    end   = datetime.datetime(2023, 7, 27, 0, 0)
+    end   = datetime.datetime(2023, 10, 13, 0, 0)
 
     for i, symbol in enumerate( symbols[:] ):
         

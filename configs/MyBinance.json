@@ -1,6 +1,0 @@
-{
-  "name": "MyBinance",
-  "n_lags": 30,
-  "timeframe": "1h",
-  "use_columns": [4]
-}

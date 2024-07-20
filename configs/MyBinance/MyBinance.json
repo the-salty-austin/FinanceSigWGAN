@@ -1,0 +1,9 @@
+{
+  "name": "MyBinance",
+  "assets": ["BTCUSDT_1h.csv"],
+  "n_lags": 6,
+  "timeframe": "1h",
+  "use_columns": ["close"],
+  "start": "2023-03-05",
+  "end": "2023-10-13"
+}

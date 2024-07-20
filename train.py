@@ -137,7 +137,7 @@ def main(
     plt.savefig(os.path.join(experiment_dir, 'x_real.png'))
     plt.close()
 
-    plot_individual_data(dataset=data_config['name'], locate_dir=os.path.join(experiment_dir, 'RealDataFigure'))
+    # plot_individual_data(dataset=data_config['name'], locate_dir=os.path.join(experiment_dir, 'RealDataFigure'))
 
     evaluate_generator(experiment_dir, batch_size=5000, )
 
@@ -166,9 +166,9 @@ def benchmark_sigwgan(
 
     for dataset, generator, seed in grid:
         print(f"SigWGAN - data:{dataset}, G:{generator}, seed:{seed}")
-        data_config = load_obj(get_config_path('', dataset))
-        gan_config = load_obj(get_config_path('Trainer', 'trainer_SigWGAN'))
-        generator_config = load_obj(get_config_path('Generator', 'gen_' + generator))
+        data_config = load_obj(get_config_path(dataset, dataset))
+        gan_config = load_obj(get_config_path(dataset+'/Trainer', 'trainer_SigWGAN'))
+        generator_config = load_obj(get_config_path(dataset+'/Generator', 'gen_' + generator))
 
         experiment_dir = get_sigwgan_experiment_dir(dataset, generator, 'SigWGAN', seed)
 
@@ -271,8 +271,8 @@ if __name__ == '__main__':
     else:
         compute_device = 'cpu'
     # target_dataset = os.listdir('./datasets')[-1:]
-    # target_dataset = ('MyBinance', )
-    target_dataset = ('CorrelatedBrownian', )
+    target_dataset = ('MyBinance', )
+    # target_dataset = ('CorrelatedBrownian', )
     # target_dataset.remove('Uniswap')
     # target_dataset.append('Uniswap')
     # target_dataset = ('BINANCE',)

@@ -1,6 +1,0 @@
-{
-  "name": "BINANCE",
-  "n_lags": 120,
-  "timeframe": "1h",
-  "use_columns": [4]
-}

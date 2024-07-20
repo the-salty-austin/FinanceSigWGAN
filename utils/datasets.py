@@ -134,7 +134,7 @@ def get_data_binance(datadir, data_config):
 
 def get_data_mybinance(datadir, data_config):
     """
-    Get ETH vs USTD dataset
+    Get crypto vs USDT dataset
     Returns
     -------
     dataset: torch.Tensor
@@ -142,35 +142,43 @@ def get_data_mybinance(datadir, data_config):
     """
     files = glob.glob(os.path.join(datadir, '*csv'))
     data_path = os.path.join(datadir, 'x_real_rolled.pt')
-    if os.path.exists(data_path):
-        print('Use data: \n\t' + '\n\t'.join(files))
-        datasets = load_obj(data_path)
-        print(f'\tRolled data for training, shape {list(datasets.shape)}')
-        # print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
-        print('\tExample :', datasets[0][:3])
-    else:
-        datasets = []
-        for file in files:
-            if os.path.exists(file + '.rolled.pt'):
-                dataset = load_obj(data_path)
-            else:
-                df = pd.read_csv(file)
-                print(df)
-                print(f'Preprocess data: {os.path.basename(file)}, shape {df.shape}')
-                dataset = df[df.columns[data_config['use_columns']]].to_numpy(dtype='float')
-                print(dataset)
-                print(df.columns[data_config['use_columns']])
-                dataset = torch.FloatTensor(dataset)
-                dataset = rolling_window(dataset, data_config['n_lags'])
-                dataset = transfer_percentage_seq(dataset)
+    start_date = pd.to_datetime( data_config['start'] )
+    end_date = pd.to_datetime( data_config['end'] )
 
-                save_obj(dataset, file + '.rolled.pt')
-            datasets.append(dataset)
-            print(f'\tRolled data for training, shape {list(dataset.shape)}')
-            print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in dataset[0][:3]]))
-            print()
-        datasets = torch.cat(datasets, dim=2)
-        save_obj(datasets, data_path)
+    # if os.path.exists(data_path):
+    #     print('Use data: \n\t' + '\n\t'.join(files))
+    #     datasets = load_obj(data_path)
+    #     print(f'\tRolled data for training, shape {list(datasets.shape)}')
+    #     # print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in datasets[0][:3]]))
+    #     print('\tExample :', datasets[0][:3])
+    # else:
+    datasets = []
+    for file in files:
+        # if os.path.exists(file + '.rolled.pt'):
+        #     dataset = load_obj(data_path)
+        # else:
+        df = pd.read_csv(file)
+        if file.split('\\')[-1] not in data_config['assets']: continue
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df[(df['timestamp'] >= start_date) & (df['timestamp'] <= end_date)]
+        print(df)
+        print(f'Preprocess data: {os.path.basename(file)}, shape {df.shape}')
+        # print(df[data_config['use_columns']].to_numpy())
+        dataset = df[data_config['use_columns']].to_numpy(dtype='float')
+        # print(dataset)
+        dataset = torch.FloatTensor(dataset)
+        dataset = rolling_window(dataset, data_config['n_lags'])
+        dataset = transfer_percentage_seq(dataset)
+
+        save_obj(dataset, file + '.rolled.pt')
+        # ======= end of INNER if / else conditional =======
+        datasets.append(dataset)
+        print(f'\tRolled data for training, shape {list(dataset.shape)}')
+        print('\tExample : {:.6f}, {:.6f}, {:.6f} ...'.format(*[i.item() for i in dataset[0][:3]]))
+        print()
+        # ======= end of OUTER if / else conditional =======
+    datasets = torch.cat(datasets, dim=2)
+    save_obj(datasets, data_path)
     return datasets
 
 

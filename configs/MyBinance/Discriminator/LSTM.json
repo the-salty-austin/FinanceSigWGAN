@@ -1,0 +1,5 @@
+{
+    "discriminator_type": "LSTM",
+    "hidden_dim": 8,
+    "n_layers": 3
+}
